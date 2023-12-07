@@ -1,9 +1,5 @@
-FROM alpine:3.14
-# Feel free to add below any helpful dependency for debugging.
-# iproute2 is for ss.
-RUN apk --no-cache --no-progress add bash curl ca-certificates tzdata lsof iproute2 \
-    && update-ca-certificates \
-    && rm -rf /var/cache/apk/*
+FROM docker.io/80x86/base-fedora:39-minimal-amd64
+#COPY script/ca-certificates.crt /etc/ssl/certs/
 COPY dist/traefik /
 EXPOSE 80
 VOLUME ["/tmp"]
