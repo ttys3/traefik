@@ -1751,6 +1751,18 @@ func loadMiddlewares(listener gatev1.Listener, prefix string, filters []gatev1.H
 			if err != nil {
 				return nil, fmt.Errorf("creating RedirectRegex middleware: %w", err)
 			}
+		case gatev1.HTTPRouteFilterURLRewrite:
+			var err error
+			middleware, err = createURLRewriteMiddleware(listenerScheme, filter.URLRewrite)
+			if err != nil {
+				return nil, fmt.Errorf("creating URLRewrite middleware: %w", err)
+			}
+		case gatev1.HTTPRouteFilterExtensionRef:
+			var err error
+			middleware, err = createExtensionMiddleware(listenerScheme, filter.ExtensionRef)
+			if err != nil {
+				return nil, fmt.Errorf("creating URLRewrite middleware: %w", err)
+			}
 		default:
 			// As per the spec:
 			// https://gateway-api.sigs.k8s.io/api-types/httproute/#filters-optional
@@ -1804,6 +1816,30 @@ func createRedirectRegexMiddleware(scheme string, filter *gatev1.HTTPRequestRedi
 			Permanent:   statusCode == http.StatusMovedPermanently,
 		},
 	}, nil
+}
+
+func createURLRewriteMiddleware(scheme string, filter *gatev1.HTTPURLRewriteFilter) (*dynamic.Middleware, error) {
+	if filter.Hostname != nil && *filter.Hostname != "" {
+		return nil, fmt.Errorf("hostname is not supported")
+	}
+	if filter.Path.Type == gatev1.FullPathHTTPPathModifier {
+		if *filter.Path.ReplaceFullPath == "" {
+			return nil, fmt.Errorf("replaceFullPath cannot be empty when type is FullPath")
+		}
+		return &dynamic.Middleware{
+			ReplacePath: &dynamic.ReplacePath{
+				Path: *filter.Path.ReplaceFullPath,
+			}}, nil
+
+	}
+	return &dynamic.Middleware{
+		StripPrefixRegex: &dynamic.StripPrefixRegex{
+			Regex: []string{*filter.Path.ReplacePrefixMatch},
+		}}, nil
+}
+
+func createExtensionMiddleware(scheme string, filter *gatev1.LocalObjectReference) (*dynamic.Middleware, error) {
+	return nil, fmt.Errorf("HTTPRouteFilterExtensionRef is not supported")
 }
 
 func getProtocol(portSpec corev1.ServicePort) string {
