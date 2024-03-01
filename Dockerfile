@@ -1,11 +1,7 @@
 # syntax=docker/dockerfile:1.2
-FROM alpine:3.19
+FROM docker.io/80x86/base-fedora:39-minimal-amd64
 
-RUN apk --no-cache --no-progress add ca-certificates tzdata \
-    && rm -rf /var/cache/apk/*
-
-ARG TARGETPLATFORM
-COPY ./dist/$TARGETPLATFORM/traefik /
+COPY ./dist/linux/amd64/traefik /
 
 EXPOSE 80
 VOLUME ["/tmp"]

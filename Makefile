@@ -37,7 +37,7 @@ build-webui-image:
 .PHONY: clean-webui
 #? clean-webui: Clean WebUI static generated assets
 clean-webui:
-	rm -r webui/static
+	rm -rf webui/static
 	mkdir -p webui/static
 	printf 'For more information see `webui/readme.md`' > webui/static/DONT-EDIT-FILES-IN-THIS-DIRECTORY.md
 
@@ -153,8 +153,8 @@ multi-arch-image-%: binary-linux-amd64 binary-linux-arm64
 #? build-image: Clean up static directory and build a Docker Traefik image
 build-image: export DOCKER_BUILDX_ARGS := --load
 build-image: export DOCKER_BUILD_PLATFORMS := linux/$(GOARCH)
-build-image: clean-webui
-	@$(MAKE) multi-arch-image-latest
+build-image: clean-webui binary-linux-amd64
+	sudo podman build -t traefik/traefik:v3.0.0-rc1 -f Dockerfile .
 
 .PHONY: build-image-dirty
 #? build-image-dirty: Build a Docker Traefik image without re-building the webui when it's already built
